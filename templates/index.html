@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Food Waste Management System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; }
+
+    header {
+      background: #2e7d32; color: white;
+      padding: 16px 30px; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    header h1 { font-size: 22px; }
+    #logout-btn {
+      background: white; color: #2e7d32;
+      border: none; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer;
+      font-weight: 600; font-size: 13px; display: none;
+    }
+
+    .container { max-width: 860px; margin: 30px auto; padding: 0 20px; }
+
+    .card {
+      background: white; border-radius: 10px;
+      padding: 30px; margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      max-width: 420px; margin: 60px auto;
+    }
+    .card h2 { margin-bottom: 8px; color: #2e7d32; font-size: 22px; }
+    .card p.sub { font-size: 13px; color: #777; margin-bottom: 24px; }
+
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+    input, select {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid #ddd; border-radius: 6px;
+      font-size: 14px; margin-bottom: 16px;
+    }
+    input:focus, select:focus { outline: none; border-color: #2e7d32; }
+
+    .btn {
+      background: #2e7d32; color: white;
+      border: none; padding: 12px 28px;
+      border-radius: 6px; font-size: 15px;
+      cursor: pointer; width: 100%;
+    }
+    .btn:hover { background: #1b5e20; }
+
+    .otp-box {
+      background: #e8f5e9; border: 1px dashed #2e7d32;
+      border-radius: 8px; padding: 16px;
+      text-align: center; margin-bottom: 16px; display: none;
+    }
+    .otp-box p { font-size: 13px; color: #555; margin-bottom: 6px; }
+    .otp-box span { font-size: 32px; font-weight: 700; color: #2e7d32; letter-spacing: 8px; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; }
+    #dash-container { max-width: 860px; margin: 30px auto; padding: 0 20px; }
+    .dash-card {
+      background: white; border-radius: 10px;
+      padding: 30px; margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .greeting { font-size: 18px; font-weight: 600; color: #2e7d32; margin-bottom: 4px; }
+    .sub-greeting { font-size: 13px; color: #777; margin-bottom: 20px; }
+
+    .donation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .donation-card {
+      background: #f9f9f9; border: 1px solid #e0e0e0;
+      border-radius: 8px; padding: 16px;
+    }
+    .donation-card h3 { font-size: 16px; margin-bottom: 8px; }
+    .donation-card p { font-size: 13px; color: #555; margin-bottom: 4px; }
+
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 8px;
+    }
+    .badge.available { background: #e8f5e9; color: #2e7d32; }
+    .badge.claimed { background: #e3f2fd; color: #1565c0; }
+    .badge.expired { background: #ffebee; color: #c62828; }
+
+    .empty { text-align: center; color: #999; padding: 20px; font-size: 14px; }
+
+    /* FAB */
+    #fab {
+      position: fixed; bottom: 36px; right: 36px;
+      background: #2e7d32; color: white;
+      width: 60px; height: 60px; border-radius: 50%;
+      font-size: 34px; border: none; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      display: none; align-items: center; justify-content: center;
+      z-index: 50; line-height: 1;
+    }
+    #fab:hover { background: #1b5e20; transform: scale(1.08); }
+
+    /* MODAL */
+    #modal-overlay {
+      display: none; position: fixed;
+      inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    #modal-overlay.active { display: flex; }
+    #modal {
+      background: white; border-radius: 10px;
+      padding: 30px; width: 90%; max-width: 460px;
+      position: relative;
+    }
+    #modal h2 { margin-bottom: 20px; color: #2e7d32; }
+    #close-modal {
+      position: absolute; top: 14px; right: 18px;
+      font-size: 22px; cursor: pointer; color: #999;
+      background: none; border: none;
+    }
+
+    #msg {
+      margin-top: 12px; padding: 10px;
+      border-radius: 6px; font-size: 14px; display: none;
+    }
+    #msg.success { background: #e8f5e9; color: #2e7d32; display: block; }
+    #msg.error { background: #ffebee; color: #c62828; display: block; }
+
+    #login-error {
+      color: #c62828; font-size: 13px;
+      margin-top: -10px; margin-bottom: 12px; display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🥗 Food Waste Management</h1>
+  <button id="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <!-- STEP 1 -->
+  <div class="card" id="step1">
+    <h2>👋 Welcome</h2>
+    <p class="sub">Login to manage your food donations.</p>
+    <label>Your Name</label>
+    <input type="text" id="login-name" placeholder="e.g. Murali" />
+    <label>Email Address</label>
+    <input type="email" id="login-email" placeholder="e.g. murali@email.com" />
+    <p id="login-error">Please fill in all fields.</p>
+    <button class="btn" onclick="sendOTP()">Send OTP</button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card" id="step2" style="display:none;">
+    <h2>🔐 Verify OTP</h2>
+    <p class="sub">Enter the OTP sent to your email.</p>
+    <div class="otp-box" id="otp-display">
+      <p>Your OTP (demo)</p>
+      <span id="otp-value"></span>
+    </div>
+    <label>Enter OTP</label>
+    <input type="text" id="otp-input" placeholder="6-digit code" maxlength="6" />
+    <p id="otp-error" style="color:#c62828;font-size:13px;margin-top:-10px;margin-bottom:12px;display:none;">Incorrect OTP. Try again.</p>
+    <button class="btn" onclick="verifyOTP()">Verify & Login</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div id="dash-container">
+    <div class="dash-card">
+      <p class="greeting" id="greeting"></p>
+      <p class="sub-greeting" id="sub-greeting"></p>
+      <h2 style="color:#2e7d32;margin-bottom:16px;">My Donations</h2>
+      <div class="donation-grid" id="donation-list">
+        <p class="empty">Loading...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button id="fab" onclick="openModal()">+</button>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <button id="close-modal" onclick="closeModal()">✕</button>
+    <h2>📦 New Donation</h2>
+    <label>Food Item</label>
+    <input type="text" id="food_item" placeholder="e.g. Rice, Idli" />
+    <label>Quantity</label>
+    <input type="number" id="quantity" placeholder="e.g. 10" min="1" />
+    <label>Location</label>
+    <input type="text" id="location" placeholder="e.g. Kanamanapalle" />
+    <label>Status</label>
+    <select id="status">
+      <option value="available">Available</option>
+      <option value="claimed">Claimed</option>
+      <option value="expired">Expired</option>
+    </select>
+    <button class="btn" onclick="submitDonation()">Submit Donation</button>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<script>
+  const API = '/api/donations/';
+  let currentUser = null;
+  let currentEmail = null;
+  let generatedOTP = null;
+
+  function sendOTP() {
+    const name = document.getElementById('login-name').value.trim();
+    const email = document.getElementById('login-email').value.trim();
+    const err = document.getElementById('login-error');
+    if (!name || !email) { err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    currentUser = name;
+    currentEmail = email;
+    generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('otp-value').textContent = generatedOTP;
+    document.getElementById('otp-display').style.display = 'block';
+  }
+
+  function verifyOTP() {
+    const entered = document.getElementById('otp-input').value.trim();
+    const err = document.getElementById('otp-error');
+    if (entered !== generatedOTP) { err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    localStorage.setItem('donor_name', currentUser);
+    localStorage.setItem('donor_email', currentEmail);
+    showDashboard();
+  }
+
+  function showDashboard() {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('logout-btn').style.display = 'block';
+    document.getElementById('fab').style.display = 'flex';
+    document.getElementById('greeting').textContent = `Hello, ${currentUser} 👋`;
+    document.getElementById('sub-greeting').textContent = `Logged in as ${currentEmail}`;
+    fetchMyDonations();
+  }
+
+  function logout() {
+    localStorage.removeItem('donor_name');
+    localStorage.removeItem('donor_email');
+    currentUser = null; currentEmail = null; generatedOTP = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('login-page').style.display = 'block';
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('logout-btn').style.display = 'none';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('login-name').value = '';
+    document.getElementById('login-email').value = '';
+    document.getElementById('otp-input').value = '';
+  }
+
+  async function fetchMyDonations() {
+    const res = await fetch(API);
+    const data = await res.json();
+    const mine = data.filter(d => d.donor_name.toLowerCase() === currentUser.toLowerCase());
+    const list = document.getElementById('donation-list');
+    if (mine.length === 0) {
+      list.innerHTML = '<p class="empty">No donations yet. Click the + button to add one.</p>';
+      return;
+    }
+    list.innerHTML = mine.map(d => `
+      <div class="donation-card">
+        <h3>${d.food_item}</h3>
+        <p><strong>Quantity:</strong> ${d.quantity}</p>
+        <p><strong>Location:</strong> ${d.location}</p>
+        <p><strong>Date:</strong> ${new Date(d.created_at).toLocaleDateString()}</p>
+        <span class="badge ${d.status}">${d.status.charAt(0).toUpperCase() + d.status.slice(1)}</span>
+      </div>
+    `).join('');
+  }
+
+  function openModal() { document.getElementById('modal-overlay').classList.add('active'); }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+    document.getElementById('msg').className = '';
+    document.getElementById('msg').textContent = '';
+  }
+
+  async function submitDonation() {
+    const msg = document.getElementById('msg');
+    const body = {
+      donor_name: currentUser,
+      food_item: document.getElementById('food_item').value,
+      quantity: parseInt(document.getElementById('quantity').value),
+      location: document.getElementById('location').value,
+      status: document.getElementById('status').value,
+    };
+    if (!body.food_item || !body.quantity || !body.location) {
+      msg.className = 'error'; msg.textContent = 'Please fill in all fields.'; return;
+    }
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      msg.className = 'success'; msg.textContent = 'Donation submitted!';
+      document.getElementById('food_item').value = '';
+      document.getElementById('quantity').value = '';
+      document.getElementById('location').value = '';
+      fetchMyDonations();
+      setTimeout(closeModal, 1500);
+    } else {
+      msg.className = 'error'; msg.textContent = 'Something went wrong. Try again.';
+    }
+  }
+
+  function getCookie(name) {
+    let val = null;
+    if (document.cookie) {
+      document.cookie.split(';').forEach(c => {
+        const t = c.trim();
+        if (t.startsWith(name + '=')) val = decodeURIComponent(t.slice(name.length + 1));
+      });
+    }
+    return val;
+  }
+
+  // Auto-login if session exists
+  const saved = localStorage.getItem('donor_name');
+  const savedEmail = localStorage.getItem('donor_email');
+  if (saved && savedEmail) {
+    currentUser = saved; currentEmail = savedEmail; showDashboard();
+  }
+</script>
+</body>
+</html>
